@@ -1,0 +1,23 @@
+{
+  "name": "BitBurner-scripts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "hello.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChipsEatingMonkey/BitBurner-scripts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ChipsEatingMonkey/BitBurner-scripts/issues"
+  },
+  "homepage": "https://github.com/ChipsEatingMonkey/BitBurner-scripts#readme",
+  "devDependencies": {
+    "jsdoc": "^3.6.7"
+  }
+}
