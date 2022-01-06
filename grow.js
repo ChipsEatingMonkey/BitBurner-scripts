@@ -7,5 +7,6 @@
  *      target: the server to grow
  */
  export async function main(ns) {
-    ns.grow(target);
+    let target = ns.args[0];
+   await ns.grow(target);
 }

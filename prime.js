@@ -7,7 +7,7 @@
  *      target: the server to prime
  * 
  * lowering securitiy to minimum and grow available money to max.
- * 
+ * Calculates needed threads and takes into account available Ram.
  * 
  * Requirements: 
  *        ./weaken.js
@@ -24,23 +24,26 @@
     let nowMoney = ns.getServerMoneyAvailable(target);
 
     let freeRam = ns.getServerMaxRam(ns.getHostname()) - ns.getServerUsedRam(ns.getHostname());
-
+    let threadRam = 1.75;
     let isPrimed = false;
     while (!isPrimed){
+        /**** TO DO: function caculateThreads that determines how many threads should be started */
         nowSec = ns.getServerSecurityLevel(target);
         nowMoney = ns.getServerMoneyAvailable(target);
 
         isPrimed = (nowSec - minSec == 0 && maxMoney - nowMoney == 0);
 
         if (nowSec - minSec != 0){
-            ns.exec('weaken.js',ns.getHostname(), Math.floor(freeRam/ns.getScriptRam('weaken.js')));
-            ns.sleep(ns.getWeakenTime(target));
+            ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), Math.floor(freeRam/threadRam), target);
+           await ns.sleep(ns.getWeakenTime(target));
         }
         else if (maxMoney - nowMoney != 0){
-            ns.exec('grow.js',ns.getHostname(), Math.floor(freeRam/ns.getScriptRam('grow.js')));
-            ns.sleep(ns.getGrowTime(target));
+            ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), Math.floor(freeRam/threadRam), target);
+           await ns.sleep(ns.getGrowTime(target));
         }
-
-
+        else{
+            isPrimed = true;
+            ns.print('primed target: ', target);
+        }
     }
 }

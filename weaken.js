@@ -7,5 +7,6 @@
  *      target: the server to weaken
  */
  export async function main(ns) {
-    ns.weaken(target);
+    let target = ns.args[0];
+    await ns.weaken(target);
 }
