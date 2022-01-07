@@ -29,34 +29,30 @@
     let threadRam = 1.75;
 
     //ns.enableLog("print");
-
+    // test
     // one formulas are unlocked hackExp(server, player)
     let playerHackLvl = ns.getHackingLevel();
-    let batchTime = 50;
+    let batchTime = 5;
     // these change everytime the playerhacklvl changes
     let weakenTime = ns.getWeakenTime(target);
     let growTime = ns.getGrowTime(target);
     let hackTime = ns.getHackTime(target);
-    let startTimes = [batchTime, batchTime +(weakenTime-growTime),3*batchTime, weakenTime - hackTime - batchTime];  //w, w ,g h
+    let startTimes = [batchTime,3*batchTime , 2*batchTime +(weakenTime-growTime), weakenTime - hackTime];  //w, w ,g h
 
     let maxLoop = Math.floor(freeRam/ (1.75*4));
-    maxLoop = 1;
     ns.tprint("Batches: ",maxLoop);
     for (let cycle = 0; cycle < maxLoop; cycle++){
-        setTimeout(callWeaken, startTimes[0]+ cycle*batchTime,target , 1, ns);
-        ns.print("callWeaken, starttime: ", startTimes[0]+ cycle*batchTime);
+        setTimeout(callWeaken, startTimes[0]+ cycle*batchTime*4,target , 1, ns);
+        setTimeout(callWeaken, startTimes[1]+ cycle*batchTime*4,target , 1, ns);
+        setTimeout(callGrow, startTimes[2]+ cycle*batchTime*4,target , 1, ns); 
+        setTimeout(callHack, startTimes[3]+ cycle*batchTime*4,target , 1, ns);
 
-        setTimeout(callWeaken, startTimes[1]+ cycle*batchTime,target , 1, ns);
-        ns.print("callWeaken, starttime: ", startTimes[1]+ cycle*batchTime);
-
-        setTimeout(callGrow, startTimes[2]+ cycle*batchTime,target , 1, ns); 
-        ns.print("callGrow, starttime: ", startTimes[2]+ cycle*batchTime);
-
-        setTimeout(callHack, startTimes[3]+ cycle*batchTime,target , 1, ns);
-        ns.print("callHack, starttime: ", startTimes[3]+ cycle*batchTime);
+        ns.print("callHack, GOING OFF: ", Math.floor(hackTime +startTimes[3]+ cycle*batchTime*4)%1000);
+        ns.print("callWeaken, GOING OFF: ", Math.floor(weakenTime +(startTimes[0]+ cycle*batchTime*4))%1000);
+        ns.print("callGrow, GOING OFF: ", Math.floor(growTime +startTimes[2]+ cycle*batchTime*4)%1000);
+        ns.print("callWeaken, GOING OFF: ",Math.floor(weakenTime + startTimes[1]+ cycle*batchTime*4)%1000);
     }
-    setTimeout(callWeaken, startTimes[0]+ batchTime*maxLoop,target , 1, ns);
-    await ns.asleep(3*maxLoop*weakenTime);
+    await ns.asleep(hackTime +startTimes[3]+ maxLoop*batchTime*4 +1000);
 }
 
 function callWeaken(target, threads, ns){
