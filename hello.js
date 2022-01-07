@@ -1,8 +1,9 @@
-/** @param {NS} ns **/
+
 /**
  * 
- * @param {ns} gameobject
+ * 
  */
+/** @param @param {import(".").NS } ns **/
 export async function main(ns) {
     ns.tprint("hello");
 }

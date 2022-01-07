@@ -1,7 +1,7 @@
-/** @param {NS} ns **/
+
 /**
  * 
- * @param {gameobject} ns
+ *
  * @argument {String} target
  * recives one argument {target}: 
  *      target: the server to prime.
@@ -14,10 +14,9 @@
  *        ./weaken.js
  *        ./grow.js
  */
+/** @param {import(".").NS } ns **/
  export async function main(ns) {
-    
     let target = ns.args[0] ?? 'n00dles';
-
     ns.disableLog("ALL");
     let minSec = ns.getServerMinSecurityLevel(target);
     let nowSec = ns.getServerSecurityLevel(target);
@@ -35,6 +34,7 @@
         nowSec = ns.getServerSecurityLevel(target);
         nowMoney = ns.getServerMoneyAvailable(target);
 
+
         isPrimed = (nowSec - minSec == 0 && maxMoney - nowMoney == 0);
 
         if (nowSec - minSec != 0){
@@ -46,9 +46,6 @@
                 if (maxMoney - nowMoney != 0){ // use extra Ram to grow if needed
                     ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
                 }
-                await ns.sleep(ns.getWeakenTime(target)); 
-                ns.print("after weaken sec to destroy is: ", nowSec - minSec);
-
             }
             else {
                 // in this state the server has grown to max and needs one last weaken to offset the incurred security from thoese grow calls
@@ -56,12 +53,12 @@
                     ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
                 }
             }
+            await ns.sleep(ns.getWeakenTime(target)); 
         }
         else if (maxMoney - nowMoney != 0){
             ns.print("money to grow is: ", maxMoney - nowMoney);
             ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
             await ns.sleep(ns.getGrowTime(target)+ 100);
-            ns.print("after money to grow is: ", maxMoney - nowMoney);
         }
         else{
             isPrimed = true;
@@ -69,7 +66,7 @@
         }
     }
 }
-
+/** @param {import(".").NS } ns **/
 function calculateWeakenThreads(freeRam, minSec, nowSec){
     /**
      * argument {int} freeRam
@@ -79,9 +76,9 @@ function calculateWeakenThreads(freeRam, minSec, nowSec){
      * calculates the amount of Threads needed to reach minimum security with one call of weaken.
      * If not enough Ram is available it will do the most threads possible
      */
+
     let maxThreads = Math.floor(freeRam / 1.75);
     let secDiff = nowSec - minSec;
-
     return Math.ceil(Math.min(maxThreads, (secDiff/0.05)));
 }
 
