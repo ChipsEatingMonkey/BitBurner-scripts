@@ -39,10 +39,16 @@
 
         if (nowSec - minSec != 0){
             ns.print("sec to destroy is: ", nowSec - minSec);
-            if (calculateWeakenThreads(freeRam, minSec, nowSec) > 5) { // if this is false that means a weaken call is only worth if its going to be the last one
+            if (calculateWeakenThreads(freeRam, minSec, nowSec) > 4) { // if this is false that means a weaken call is only worth if its going to be the last one
                 ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
-                await ns.sleep(ns.getWeakenTime(target) + 100); //added Buffer
+                await ns.asleep(100);
+                freeRam = ns.getServerMaxRam(ns.getHostname()) - ns.getServerUsedRam(ns.getHostname());
+                if (maxMoney - nowMoney != 0){ // use extra Ram to grow if needed
+                    ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
+                }
+                await ns.sleep(ns.getWeakenTime(target)); 
                 ns.print("after weaken sec to destroy is: ", nowSec - minSec);
+
             }
             else {
                 // in this state the server has grown to max and needs one last weaken to offset the incurred security from thoese grow calls
