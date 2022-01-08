@@ -39,19 +39,11 @@
 
         if (nowSec - minSec != 0){
             ns.print("sec to destroy is: ", nowSec - minSec);
-            if (calculateWeakenThreads(freeRam, minSec, nowSec) > 4) { // if this is false that means a weaken call is only worth if its going to be the last one
-                ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
-                await ns.asleep(100);
-                freeRam = ns.getServerMaxRam(ns.getHostname()) - ns.getServerUsedRam(ns.getHostname());
-                if (maxMoney - nowMoney != 0){ // use extra Ram to grow if needed
-                    ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
-                }
-            }
-            else {
-                // in this state the server has grown to max and needs one last weaken to offset the incurred security from thoese grow calls
-                if (maxMoney - nowMoney == 0){
-                    ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
-                }
+            ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
+            await ns.asleep(50);
+            freeRam = ns.getServerMaxRam(ns.getHostname()) - ns.getServerUsedRam(ns.getHostname());
+            if (maxMoney - nowMoney != 0){ // use extra Ram to grow if needed
+                ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
             }
             await ns.sleep(ns.getWeakenTime(target)); 
         }
@@ -79,7 +71,7 @@ function calculateWeakenThreads(freeRam, minSec, nowSec){
 
     let maxThreads = Math.floor(freeRam / 1.75);
     let secDiff = nowSec - minSec;
-    return Math.ceil(Math.min(maxThreads, (secDiff/0.05)));
+    return Math.max(1,Math.ceil(Math.min(maxThreads, (secDiff/0.05))));
 }
 
 
@@ -103,5 +95,5 @@ function calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney){
 
     let growthAmount = 1 / missingMoneyAsPartial;
     let growthThreads = ns.growthAnalyze(target, growthAmount);
-    return Math.ceil(Math.min(maxThreads, growthThreads));
+    return Math.max(Math.ceil(Math.min(maxThreads, growthThreads)),1);
 }

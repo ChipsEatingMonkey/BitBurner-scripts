@@ -1,8 +1,4 @@
-/** @param {NS} ns **/
-/**
- * 
- * @param {ns} gameobject
- */
+/** @param @param {import(".").NS } ns **/
  export async function main(ns) {
     
     let target = ns.args[0] ?? 'n00dles';
@@ -50,8 +46,9 @@
     }
 
     ns.tprint("target: ", target);
-    ns.tprint("max Threads are: ",maxThreads);
+    ns.tprint("weakenTime in sec is: ",ns.getWeakenTime(target)/1000);
     ns.tprint("Best dollar per Thread: ", bestDollarPerThread);
+    ns.tprint("Best dollar per Thread per WeakenTime: ", bestDollarPerThread/ns.getWeakenTime(target));
     ns.tprint("Money Stolen: ", bestStealPerBatch);
     ns.tprint("threads needed: (w, w, g, h) ", bestThreads);
 }

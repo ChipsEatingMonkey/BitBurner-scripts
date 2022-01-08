@@ -1,4 +1,3 @@
-/** @param {NS} ns **/
 /**
  * 
  * @param {gameobject} ns
@@ -15,13 +14,17 @@
  *        ./grow.js
  *        ./hack.js
  */
+/** @param @param {import(".").NS } ns **/
  export async function main(ns) {
 
     let host = ns.args[0] ?? ns.getHostname();
     let target = ns.args[1] ?? 'n00dles';
-    let batchTime = 50;
+    let playerlvl = ns.args[2]?? ns.getHackingLevel();
+    
 
-    //ns.disableLog("ALL");
+    isPrimed(ns, target);
+    ns.disableLog("ALL");
+    ns.enableLog("print");
     let minSec = ns.getServerMinSecurityLevel(target);
     let nowSec = ns.getServerSecurityLevel(target);
 
@@ -29,9 +32,13 @@
     let nowMoney = ns.getServerMoneyAvailable(target);
 
     let freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
-    let threadRam = 1.75;
+    let ramPerThread = 1.75;
+    if (playerlvl != ns.getHackingLevel()){
+        ns.tprint("player lvled up!, gain lvl: ",  ns.getHackingLevel() - playerlvl);
+        playerlvl = ns.getHackingLevel();
+    }
 
-    //ns.enableLog("print");
+
 
     // one formulas are unlocked hackExp(server, player)
     let playerHackLvl = ns.getHackingLevel();
@@ -40,37 +47,99 @@
     let weakenTime = ns.getWeakenTime(target);
     let growTime = ns.getGrowTime(target);
     let hackTime = ns.getHackTime(target);
-    let startTimes = [batchTime,3*batchTime , 2*batchTime +(weakenTime-growTime), weakenTime - hackTime];  //w, w ,g h
     let bestThreads = calculateBatch(ns, target, freeRam);
-
-    let maxLoop = Math.floor(freeRam/ (1.75*bestThreads[4]));
-    ns.print("Batches: ",maxLoop);
-    for (let cycle = 0; cycle < maxLoop; cycle++){
-        setTimeout(callWeaken, startTimes[0]+ cycle*batchTime*4,host, target , bestThreads[0], ns);
-        setTimeout(callWeaken, startTimes[1]+ cycle*batchTime*4,host, target , bestThreads[1], ns);
-        setTimeout(callGrow, startTimes[2]+ cycle*batchTime*4,host, target , bestThreads[2], ns); 
-        setTimeout(callHack, startTimes[3]+ cycle*batchTime*4,host, target , bestThreads[3], ns);
-
-        ns.print("callHack, GOING OFF: ", Math.floor(hackTime +startTimes[3]+ cycle*batchTime*4)%1000);
-        ns.print("callWeaken, GOING OFF: ", Math.floor(weakenTime +(startTimes[0]+ cycle*batchTime*4))%1000);
-        ns.print("callGrow, GOING OFF: ", Math.floor(growTime +startTimes[2]+ cycle*batchTime*4)%1000);
-        ns.print("callWeaken, GOING OFF: ",Math.floor(weakenTime + startTimes[1]+ cycle*batchTime*4)%1000);
+    let batchCount = Math.floor(freeRam/ (ramPerThread*bestThreads[4]));
+    if (batchCount > weakenTime /20){
+        batchCount = Math.floor(weakenTime /20);
     }
-    setTimeout(callBatchmaster, hackTime +startTimes[3]+ maxLoop*batchTime*4 +batchTime,ns, host, target); // calling itself after run
-    await ns.asleep(hackTime +startTimes[3]+ maxLoop*batchTime*4 +batchTime*2);
+    let bufferTime = calculatebufferTimeForMaxServerUse( batchCount, bestThreads[4], weakenTime);
+    if (bufferTime < 5){
+        bufferTime = 5;
+    }
+    ns.tprint("bufferTime is: ", bufferTime);
+    let batchTime = 4* bufferTime;
+    let startTimes = [bufferTime,3*bufferTime , 2*bufferTime +(weakenTime-growTime), weakenTime - hackTime];  //w, w ,g h
+    
+
+    
+    ns.print("batchCount: ",batchCount);
+    //if (maxMoney / (maxMoney -nowMoney) > ns.growthAnalyze)
+    if (nowSec - minSec > 0)
+    {
+        if (nowSec - minSec > batchCount * 0.05){
+            if ( bestThreads[3] >= 2) {
+                ns.tprint("increasing weakencalls at cost of hackingcalls");
+                bestThreads[3] -= 1;
+                bestThreads[1] += 1;
+            }
+        }
+    }
+    let moneyAsPartial = nowMoney / maxMoney ;
+    // moneyAP * gA = 1
+    let growthAmount = 1 / moneyAsPartial;
+    if (ns.growthAnalyze(target, growthAmount)  >= batchCount)
+    {
+        if (bestThreads[3] >= 2) {
+            ns.tprint("increasing growcalls at cost of hackingcalls");
+            bestThreads[3] -= 1;
+            bestThreads[2] += 1;
+            }
+        
+    }
+    for (let batch = 0; batch < batchCount; batch++){
+        setTimeout(callWeaken, startTimes[0]+ batch*batchTime,host, target , bestThreads[0], ns);
+        setTimeout(callWeaken, startTimes[1]+ batch*batchTime,host, target , bestThreads[1], ns);
+        setTimeout(callGrow, startTimes[2]+ batch*batchTime,host, target , bestThreads[2], ns); 
+        setTimeout(callHack, startTimes[3]+ batch*batchTime,host, target , bestThreads[3], ns);
+
+       // ns.print("callHack, GOING OFF: ", Math.floor(hackTime +startTimes[3]+ batch*batchTime)%1000);
+       // ns.print("callWeaken, GOING OFF: ", Math.floor(weakenTime +(startTimes[0]+ batch*batchTime))%1000);
+       // ns.print("callGrow, GOING OFF: ", Math.floor(growTime +startTimes[2]+ batch*batchTime)%1000);
+       // ns.print("callWeaken, GOING OFF: ",Math.floor(weakenTime + startTimes[1]+ batch*batchTime)%1000);
+    }
+    setTimeout(callBatchmaster, hackTime +startTimes[3]+ batchCount*batchTime +bufferTime,ns, host, target,playerlvl); // calling itself after run
+    await ns.asleep(hackTime +startTimes[3]+ batchCount*batchTime +bufferTime*2);
+}
+/** @param @param {import(".").NS } ns **/
+function calculatebufferTimeForMaxServerUse ( batchCount, threadsPerBatch, weakenTime){
+    let functionCalls = batchCount * threadsPerBatch;
+    let cycleTime = weakenTime *0.9;
+    let bufferTime = cycleTime / functionCalls;
+    return bufferTime;
+}
+function isPrimed(ns, target){
+    let minSec = ns.getServerMinSecurityLevel(target);
+    let nowSec = ns.getServerSecurityLevel(target);
+
+    let maxMoney = ns.getServerMaxMoney(target);
+    let nowMoney = ns.getServerMoneyAvailable(target);
+    if (minSec-nowSec != 0 || maxMoney -nowMoney != 0)
+    {
+        ns.tprint("server not primed anymore");
+        if (nowSec -minSec > 20){
+            ns.tprint("server security is over 20 out of range");
+        }
+    }
+    else ns.tprint("server primed");
 }
 
 function callWeaken(host, target, threads, ns){
-    ns.exec('BitBurner-scripts/weaken.js',host, threads, target);
+    if (ns.exec('BitBurner-scripts/weaken.js',host, threads, target) == 0){
+        ns.tprint("cant start weaken");
+    }
 }
 function callGrow(host, target, threads, ns){
-    ns.exec('BitBurner-scripts/grow.js',host, threads, target);
+    if (ns.exec('BitBurner-scripts/grow.js',host, threads, target) == 0){
+        ns.tprint("cant start grow");
+    }
 }
 function callHack(host, target, threads, ns){
-    ns.exec('BitBurner-scripts/hack.js',host, threads, target);
+    if (ns.exec('BitBurner-scripts/hack.js',host, threads, target) == 0){
+        ns.tprint("cant start hack");
+    }
 }
-function callBatchmaster(ns, host, target){
-    ns.print("starting batchmaster again ps: ", ns.exec('BitBurner-scripts/remotebatchmaster.js',ns.getHostname(), 1,host , target));
+function callBatchmaster(ns, host, target,playerlvl){
+    ns.print("starting batchmaster again ps: ", ns.exec('BitBurner-scripts/remotebatchmaster.js',ns.getHostname(), 1,host , target,playerlvl));
 }
 
 function calculateBatch(ns,target, limitedRam) {
