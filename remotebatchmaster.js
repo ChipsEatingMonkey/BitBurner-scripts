@@ -35,13 +35,15 @@
     let freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
     if (runCount == 3){ // letsprime
         runCount = 0;
-        ns.tprint("runtime was 3, lets prime!");
-        ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
-        await ns.asleep(50);
-        freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
-        ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
-     
-        await ns.asleep(ns.getWeakenTime(target)); 
+        if (nowSec - minSec > 0) {
+            ns.tprint("runtime was 3, lets prime!");
+            ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
+            await ns.asleep(50);
+            freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
+            ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
+        
+            await ns.asleep(ns.getWeakenTime(target)); 
+        }
     }
 
     
@@ -61,12 +63,12 @@
     let growTime = ns.getGrowTime(target);
     let hackTime = ns.getHackTime(target);
     let bestThreads = calculateBatch(ns, target, freeRam);
-    //let batchCount = Math.floor(freeRam/ (ramPerThread*bestThreads[4]));
+    let batchCount = Math.floor(freeRam/ (ramPerThread*bestThreads[4]));
     //if (batchCount > weakenTime /20){
     //    batchCount = Math.floor(weakenTime /20);
    // }
     let bufferTime = 5;
-    let batchCount = 4684;//(weakenTime * 0.9) / bufferTime; // needs check if server can handle that
+    //let batchCount = 4684;//(weakenTime * 0.9) / bufferTime; // needs check if server can handle that
     ns.tprint("batchCount: ",batchCount);
     let batchTime = 4* bufferTime;
     let startTimes = [bufferTime,3*bufferTime , 2*bufferTime +(weakenTime-growTime), weakenTime - hackTime];  //w, w ,g h
@@ -108,10 +110,11 @@
        // ns.print("callGrow, GOING OFF: ", Math.floor(growTime +startTimes[2]+ batch*batchTime)%1000);
        // ns.print("callWeaken, GOING OFF: ",Math.floor(weakenTime + startTimes[1]+ batch*batchTime)%1000);
     }
-    // let timeFirstFunctionCallHits = hackTime +startTimes[3]+ batchCount*batchTime  the old way
-    let timeFirstFunctionCallHits = startTimes[3] + hackTime;
-    setTimeout(callBatchmaster, timeFirstFunctionCallHits +bufferTime,ns, host, target,playerlvl); // calling itself after run
-    await ns.asleep(hackTime +startTimes[3]+ batchCount*batchTime +bufferTime*2);
+    let timeFirstFunctionCallHits = hackTime +startTimes[3]+ batchCount*batchTime //not optimised the old way
+    //let timeFirstFunctionCallHits = startTimes[3] + hackTime; // not working ?? 
+    // setTimeout(callBatchmaster, timeFirstFunctionCallHits +bufferTime,ns, host, target,playerlvl); // calling itself after run
+    await ns.asleep(timeFirstFunctionCallHits +bufferTime*2);
+    ns.tprint("starting batchmaster again ps: ", ns.exec('BitBurner-scripts/remotebatchmaster.js',ns.getHostname(), 1,host , target,playerlvl,runCount ));
 }
 
 function isPrimed(ns, target){
