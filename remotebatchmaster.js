@@ -20,6 +20,8 @@
     let host = ns.args[0] ?? ns.getHostname();
     let target = ns.args[1] ?? 'n00dles';
     let playerlvl = ns.args[2]?? ns.getHackingLevel();
+    let runCount = ns.args[3]?? 0;
+    runCount += 1;
     
 
     isPrimed(ns, target);
@@ -30,8 +32,19 @@
 
     let maxMoney = ns.getServerMaxMoney(target);
     let nowMoney = ns.getServerMoneyAvailable(target);
-
     let freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
+    if (runCount == 3){ // letsprime
+        runCount = 0;
+        ns.tprint("runtime was 3, lets prime!");
+        ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
+        await ns.asleep(50);
+        freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
+        ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
+     
+        await ns.asleep(ns.getWeakenTime(target)); 
+    }
+
+    
     let ramPerThread = 1.75;
     if (playerlvl != ns.getHackingLevel()){
         ns.tprint("player lvled up!, gain lvl: ",  ns.getHackingLevel() - playerlvl);
@@ -48,21 +61,19 @@
     let growTime = ns.getGrowTime(target);
     let hackTime = ns.getHackTime(target);
     let bestThreads = calculateBatch(ns, target, freeRam);
-    let batchCount = Math.floor(freeRam/ (ramPerThread*bestThreads[4]));
-    if (batchCount > weakenTime /20){
-        batchCount = Math.floor(weakenTime /20);
-    }
-    let bufferTime = calculatebufferTimeForMaxServerUse( batchCount, bestThreads[4], weakenTime);
-    if (bufferTime < 5){
-        bufferTime = 5;
-    }
-    ns.tprint("bufferTime is: ", bufferTime);
+    //let batchCount = Math.floor(freeRam/ (ramPerThread*bestThreads[4]));
+    //if (batchCount > weakenTime /20){
+    //    batchCount = Math.floor(weakenTime /20);
+   // }
+    let bufferTime = 5;
+    let batchCount = 4684;//(weakenTime * 0.9) / bufferTime; // needs check if server can handle that
+    ns.tprint("batchCount: ",batchCount);
     let batchTime = 4* bufferTime;
     let startTimes = [bufferTime,3*bufferTime , 2*bufferTime +(weakenTime-growTime), weakenTime - hackTime];  //w, w ,g h
     
 
     
-    ns.print("batchCount: ",batchCount);
+    
     //if (maxMoney / (maxMoney -nowMoney) > ns.growthAnalyze)
     if (nowSec - minSec > 0)
     {
@@ -97,16 +108,12 @@
        // ns.print("callGrow, GOING OFF: ", Math.floor(growTime +startTimes[2]+ batch*batchTime)%1000);
        // ns.print("callWeaken, GOING OFF: ",Math.floor(weakenTime + startTimes[1]+ batch*batchTime)%1000);
     }
-    setTimeout(callBatchmaster, hackTime +startTimes[3]+ batchCount*batchTime +bufferTime,ns, host, target,playerlvl); // calling itself after run
+    // let timeFirstFunctionCallHits = hackTime +startTimes[3]+ batchCount*batchTime  the old way
+    let timeFirstFunctionCallHits = startTimes[3] + hackTime;
+    setTimeout(callBatchmaster, timeFirstFunctionCallHits +bufferTime,ns, host, target,playerlvl); // calling itself after run
     await ns.asleep(hackTime +startTimes[3]+ batchCount*batchTime +bufferTime*2);
 }
-/** @param @param {import(".").NS } ns **/
-function calculatebufferTimeForMaxServerUse ( batchCount, threadsPerBatch, weakenTime){
-    let functionCalls = batchCount * threadsPerBatch;
-    let cycleTime = weakenTime *0.9;
-    let bufferTime = cycleTime / functionCalls;
-    return bufferTime;
-}
+
 function isPrimed(ns, target){
     let minSec = ns.getServerMinSecurityLevel(target);
     let nowSec = ns.getServerSecurityLevel(target);
@@ -138,8 +145,8 @@ function callHack(host, target, threads, ns){
         ns.tprint("cant start hack");
     }
 }
-function callBatchmaster(ns, host, target,playerlvl){
-    ns.print("starting batchmaster again ps: ", ns.exec('BitBurner-scripts/remotebatchmaster.js',ns.getHostname(), 1,host , target,playerlvl));
+function callBatchmaster(ns, host, target,playerlvl, runCount){
+    ns.tprint("starting batchmaster again ps: ", ns.exec('BitBurner-scripts/remotebatchmaster.js',ns.getHostname(), 1,host , target,playerlvl,runCount ));
 }
 
 function calculateBatch(ns,target, limitedRam) {
@@ -187,8 +194,46 @@ function calculateBatch(ns,target, limitedRam) {
         }
         hackThreads++;
     }
-    ns.print("||||||||||||||||||||||||||||||||||||||||| ");
-    ns.print("threads needed: (w, w, g, h) ", bestThreads);
-    ns.print("||||||||||||||||||||||||||||||||||||||||| ");
+    ns.tprint("||||||||||||||||||||||||||||||||||||||||| ");
+    ns.tprint("threads needed: (w, w, g, h) ", bestThreads);
+    ns.tprint("||||||||||||||||||||||||||||||||||||||||| ");
     return bestThreads;
+}
+
+function calculateWeakenThreads(freeRam, minSec, nowSec){
+    /**
+     * argument {int} freeRam
+     * argument {int} minSec : minimum security of the server
+     * argument {int} nowSec : current security of the server 
+     * 
+     * calculates the amount of Threads needed to reach minimum security with one call of weaken.
+     * If not enough Ram is available it will do the most threads possible
+     */
+
+    let maxThreads = Math.floor(freeRam / 1.75);
+    let secDiff = nowSec - minSec;
+    return Math.max(1,Math.ceil(Math.min(maxThreads, (secDiff/0.05))));
+}
+
+function calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney){
+    /**
+   * argument {gameobject} ns : gameobject to call functions from
+   * argument {String} target : target server as String
+   * argument {int} freeRam  : usable ram of host server
+   * argument {int} maxMoney : maximum money the server can hold
+   * argument {int} nowMoney : available money on the server now
+   * 
+   * calculates the amount of Threads needed to reach maximum money with one call of grow.
+   * If not enough Ram is available it will do the most threads possible
+   */
+
+  let maxThreads = Math.floor(freeRam / 1.75);
+  let missingMoneyAsPartial = nowMoney / maxMoney;
+
+  //     missingMoneyAsPartial * growthAmount  = 1 | / missingMoneyAsPartial
+  // <=> growthAmount = 1 / missingMoneyAsPartial;
+
+  let growthAmount = 1 / missingMoneyAsPartial;
+  let growthThreads = ns.growthAnalyze(target, growthAmount);
+  return Math.max(Math.ceil(Math.min(maxThreads, growthThreads)),1);
 }

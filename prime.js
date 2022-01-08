@@ -54,7 +54,7 @@
         }
         else{
             isPrimed = true;
-            ns.print('primed target: ', target);
+            ns.tprint('primed target: ', target);
         }
     }
 }
