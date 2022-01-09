@@ -22,6 +22,7 @@
     let playerlvl = ns.args[2]?? ns.getHackingLevel();
     let runCount = ns.args[3]?? 0;
     runCount += 1;
+    ns.formulas.hacking.hackExp
     
 
     isPrimed(ns, target);
