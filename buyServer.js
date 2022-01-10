@@ -15,13 +15,13 @@
         ram *= 2;
     }
     if (buy == 1){
-        if (!ns.serverExists('Chad-' + nbr)){
-            ns.purchaseServer('Chad-' + nbr, Math.min(ram,maxRam));
-            ns.tprint("new Chad with RAM : ", ram);
+        if (!ns.serverExists('chad-' + nbr)){
+            ns.purchaseServer('chad-' + nbr, Math.min(ram,maxRam));
+            ns.tprint("new chad with TB RAM : ", ram/1000);
         }
     }
     else {
-        ns.tprint("could afford Server with RAM: ", ram, " at cost in mil: ",ns.getPurchasedServerCost(ram)/1000000, " use this 2 buy it run buyServer.js 4 1");
+        ns.tprint("could afford Server with TB RAM: ", ram/1000, " at cost in bil: ",ns.getPurchasedServerCost(ram)/1000000000, " use this 2 buy it run buyServer.js 4 1");
     }
     
 }
