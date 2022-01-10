@@ -1,5 +1,5 @@
 /**
- * 
+ * This is a breadth first search
  * 
  */
 /** @param @param {import(".").NS } ns **/

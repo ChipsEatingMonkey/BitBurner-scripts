@@ -24,8 +24,6 @@
     runCount += 1;
     ns.formulas.hacking.hackExp
     
-
-    isPrimed(ns, target);
     ns.disableLog("ALL");
     ns.enableLog("print");
     let minSec = ns.getServerMinSecurityLevel(target);
@@ -64,11 +62,13 @@
     let growTime = ns.getGrowTime(target);
     let hackTime = ns.getHackTime(target);
     let bestThreads = calculateBatch(ns, target, freeRam);
-    let batchCount =  ns.args[3] * 2 ?? 2; //Math.floor(freeRam/ (ramPerThread*bestThreads[4]));
+    let bufferTime = 5;
+    let batchCount = Math.min(Math.floor(hackTime/bufferTime),Math.floor(freeRam/ (ramPerThread*bestThreads[4])));// ns.args[4] ?? 100; //
+    //batchCount *= 2;
     //if (batchCount > weakenTime /20){
     //    batchCount = Math.floor(weakenTime /20);
    // }
-    let bufferTime = 5;
+    
     //let batchCount = 4684;//(weakenTime * 0.9) / bufferTime; // needs check if server can handle that
     ns.tprint("batchCount: ",batchCount);
     if (!isPrimed(ns, target)){
@@ -204,9 +204,9 @@ function calculateBatch(ns,target, limitedRam) {
         }
         hackThreads++;
     }
-    ns.tprint("||||||||||||||||||||||||||||||||||||||||| ");
-    ns.tprint("threads needed: (w, w, g, h) ", bestThreads);
-    ns.tprint("||||||||||||||||||||||||||||||||||||||||| ");
+    ns.print("||||||||||||||||||||||||||||||||||||||||| ");
+    ns.print("threads needed: (w, w, g, h) ", bestThreads);
+    ns.print("||||||||||||||||||||||||||||||||||||||||| ");
     return bestThreads;
 }
 

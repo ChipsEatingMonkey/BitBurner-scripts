@@ -49,8 +49,13 @@
         }
         else if (maxMoney - nowMoney != 0){
             ns.print("money to grow is: ", maxMoney - nowMoney);
-            ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
-            await ns.sleep(ns.getGrowTime(target)+ 100);
+            let gT= calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney);
+            ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), gT, target);
+            await ns.asleep(50);
+            freeRam = ns.getServerMaxRam(ns.getHostname()) - ns.getServerUsedRam(ns.getHostname());
+            
+            ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(),Math.min( gT, Math.floor(freeRam/1.75)), target);
+            await ns.sleep(ns.getWeakenTime(target)); 
         }
         else{
             isPrimed = true;
