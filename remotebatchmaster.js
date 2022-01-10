@@ -34,18 +34,18 @@
     let maxMoney = ns.getServerMaxMoney(target);
     let nowMoney = ns.getServerMoneyAvailable(target);
     let freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
-    if (runCount == 3){ // letsprime
-        runCount = 0;
-        if (nowSec - minSec > 0) {
-            ns.tprint("runtime was 3, lets prime!");
-            ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
-            await ns.asleep(50);
-            freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
-            ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
+    // if (runCount == 3){ // letsprime
+    //     runCount = 0;
+    //     if (nowSec - minSec > 0) {
+    //         ns.tprint("runtime was 3, lets prime!");
+    //         ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
+    //         await ns.asleep(50);
+    //         freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
+    //         ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
         
-            await ns.asleep(ns.getWeakenTime(target)); 
-        }
-    }
+    //         await ns.asleep(ns.getWeakenTime(target)); 
+    //     }
+    // }
 
     
     let ramPerThread = 1.75;
@@ -64,13 +64,17 @@
     let growTime = ns.getGrowTime(target);
     let hackTime = ns.getHackTime(target);
     let bestThreads = calculateBatch(ns, target, freeRam);
-    let batchCount = Math.floor(freeRam/ (ramPerThread*bestThreads[4]));
+    let batchCount =  ns.args[3] * 2 ?? 2; //Math.floor(freeRam/ (ramPerThread*bestThreads[4]));
     //if (batchCount > weakenTime /20){
     //    batchCount = Math.floor(weakenTime /20);
    // }
     let bufferTime = 5;
     //let batchCount = 4684;//(weakenTime * 0.9) / bufferTime; // needs check if server can handle that
     ns.tprint("batchCount: ",batchCount);
+    if (!isPrimed(ns, target)){
+        ns.tprint('server not primed anymore');
+        return; 
+    }
     let batchTime = 4* bufferTime;
     let startTimes = [bufferTime,3*bufferTime , 2*bufferTime +(weakenTime-growTime), weakenTime - hackTime];  //w, w ,g h
     
@@ -115,7 +119,7 @@
     //let timeFirstFunctionCallHits = startTimes[3] + hackTime; // not working ?? 
     // setTimeout(callBatchmaster, timeFirstFunctionCallHits +bufferTime,ns, host, target,playerlvl); // calling itself after run
     await ns.asleep(timeFirstFunctionCallHits +bufferTime*2);
-    ns.tprint("starting batchmaster again ps: ", ns.exec('BitBurner-scripts/remotebatchmaster.js',ns.getHostname(), 1,host , target,playerlvl,runCount ));
+    ns.tprint("starting batchmaster again ps: ", ns.exec('BitBurner-scripts/remotebatchmaster.js',ns.getHostname(), 1,host , target,playerlvl,runCount,batchCount ));
 }
 
 function isPrimed(ns, target){
@@ -130,8 +134,10 @@ function isPrimed(ns, target){
         if (nowSec -minSec > 20){
             ns.tprint("server security is over 20 out of range");
         }
+        return false;
     }
     else ns.tprint("server primed");
+    return true;
 }
 
 function callWeaken(host, target, threads, ns){
