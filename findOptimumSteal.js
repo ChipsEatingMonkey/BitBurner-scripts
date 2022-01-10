@@ -19,7 +19,10 @@
 
     let moneyStolen = 0;
     let tmp  = 0;
-
+    if (!isPrimed(ns, target)){
+        ns.tprint('not primed, returning...');
+        return;
+    }
     while (ns.hackAnalyze(target) * hackThreads < 1){
         moneyStolen = ns.hackAnalyze(target) * hackThreads * moneyMax;
         secToDestroy =  ns.hackAnalyzeSecurity(hackThreads);
@@ -51,4 +54,22 @@
     ns.tprint("Best dollar per Thread per WeakenTime: ", bestDollarPerThread/ns.getWeakenTime(target));
     ns.tprint("Money Stolen: ", bestStealPerBatch);
     ns.tprint("threads needed: (w, w, g, h) ", bestThreads);
+}
+
+function isPrimed(ns, target){
+    let minSec = ns.getServerMinSecurityLevel(target);
+    let nowSec = ns.getServerSecurityLevel(target);
+
+    let maxMoney = ns.getServerMaxMoney(target);
+    let nowMoney = ns.getServerMoneyAvailable(target);
+    if (minSec-nowSec != 0 || maxMoney -nowMoney != 0)
+    {
+        ns.print("server not primed anymore");
+        if (nowSec -minSec > 20){
+            ns.tprint("server security is over 20 out of range");
+        }
+        return false;
+    }
+    else ns.tprint("server primed");
+    return true;
 }

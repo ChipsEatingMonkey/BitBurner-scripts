@@ -21,8 +21,9 @@
     let target = ns.args[1] ?? 'n00dles';
     let playerlvl = ns.args[2]?? ns.getHackingLevel();
     let runCount = ns.args[3]?? 0;
+    let batchCountPrev = ns.args[4]?? 0;
     runCount += 1;
-    ns.formulas.hacking.hackExp
+    //ns.formulas.hacking.hackExp
     
     ns.disableLog("ALL");
     ns.enableLog("print");
@@ -32,6 +33,24 @@
     let maxMoney = ns.getServerMaxMoney(target);
     let nowMoney = ns.getServerMoneyAvailable(target);
     let freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
+    let secDiff = nowSec - minSec;
+
+    if (!isPrimed(ns, target)){
+        ns.tprint('server ', target ,' not primed anymore');
+    }
+    if (secDiff > 0){
+        ns.tprint("secDiff found on: ", target);
+        callWeaken(host, target, Math.ceil(secDiff/0.05), ns);
+        ns.asleep(5);
+    }
+    let moneyAsPartial = nowMoney / maxMoney;
+    if (moneyAsPartial != 1){
+        ns.tprint("missing money found found on: ", target);
+        let growthAmount = 1 / moneyAsPartial;
+        let growthThreads = ns.growthAnalyze(target, growthAmount);
+        callGrow(host, target, Math.max(growthThreads,1), ns);
+        ns.asleep(5);
+    }
     // if (runCount == 3){ // letsprime
     //     runCount = 0;
     //     if (nowSec - minSec > 0) {
@@ -39,8 +58,7 @@
     //         ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
     //         await ns.asleep(50);
     //         freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
-    //         ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target);
-        
+    //         ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target); 
     //         await ns.asleep(ns.getWeakenTime(target)); 
     //     }
     // }
@@ -61,9 +79,28 @@
     let weakenTime = ns.getWeakenTime(target);
     let growTime = ns.getGrowTime(target);
     let hackTime = ns.getHackTime(target);
+
     let bestThreads = calculateBatch(ns, target, freeRam);
+
     let bufferTime = 5;
-    let batchCount = Math.min(Math.floor(hackTime/bufferTime),Math.floor(freeRam/ (ramPerThread*bestThreads[4])));// ns.args[4] ?? 100; //
+    ns.tprint("hackTime: ",hackTime);
+    ns.tprint("bestThreads: ", bestThreads);
+    let batchCount = 0;
+    if (batchCountPrev == 0){
+        batchCount = Math.min(Math.floor(hackTime/bufferTime),Math.floor(freeRam/ (ramPerThread*bestThreads[4])));// ns.args[4] ?? 100; //
+    }
+    else {
+        batchCount = batchCountPrev;
+    }
+    // if (batchCountPrev > batchCount){
+    //     ns.tprint("prev Batchcount was higher -> hackTime got lower");
+    //     ns.tprint("sleeping here for a sec to see impact ");
+    //     ns.asleep(1000);
+    // }
+    // if (batchCountPrev < batchCount && batchCountPrev != 0){
+    //     batchCount = batchCountPrev;
+    // }
+    
     //batchCount *= 2;
     //if (batchCount > weakenTime /20){
     //    batchCount = Math.floor(weakenTime /20);
@@ -71,10 +108,6 @@
     
     //let batchCount = 4684;//(weakenTime * 0.9) / bufferTime; // needs check if server can handle that
     ns.tprint("batchCount: ",batchCount);
-    if (!isPrimed(ns, target)){
-        ns.tprint('server not primed anymore');
-        return; 
-    }
     let batchTime = 4* bufferTime;
     let startTimes = [bufferTime,3*bufferTime , 2*bufferTime +(weakenTime-growTime), weakenTime - hackTime];  //w, w ,g h
     
@@ -82,28 +115,19 @@
     
     
     //if (maxMoney / (maxMoney -nowMoney) > ns.growthAnalyze)
-    if (nowSec - minSec > 0)
-    {
-        if (nowSec - minSec > batchCount * 0.05){
-            if ( bestThreads[3] >= 2) {
-                ns.tprint("increasing weakencalls at cost of hackingcalls");
-                bestThreads[3] -= 1;
-                bestThreads[1] += 1;
-            }
-        }
-    }
-    let moneyAsPartial = nowMoney / maxMoney ;
+  
+    //let moneyAsPartial = nowMoney / maxMoney ;
     // moneyAP * gA = 1
-    let growthAmount = 1 / moneyAsPartial;
-    if (ns.growthAnalyze(target, growthAmount)  >= batchCount)
-    {
-        if (bestThreads[3] >= 2) {
-            ns.tprint("increasing growcalls at cost of hackingcalls");
-            bestThreads[3] -= 1;
-            bestThreads[2] += 1;
-            }
+    //let growthAmount = 1 / moneyAsPartial;
+    // if (ns.growthAnalyze(target, growthAmount)  >= batchCount)
+    // {
+    //     if (bestThreads[3] >= 2) {
+    //         ns.tprint("increasing growcalls at cost of hackingcalls");
+    //         bestThreads[3] -= 1;
+    //         bestThreads[2] += 1;
+    //         }
         
-    }
+    // }
     for (let batch = 0; batch < batchCount; batch++){
         setTimeout(callWeaken, startTimes[0]+ batch*batchTime,host, target , bestThreads[0], ns);
         setTimeout(callWeaken, startTimes[1]+ batch*batchTime,host, target , bestThreads[1], ns);
@@ -130,13 +154,16 @@ function isPrimed(ns, target){
     let nowMoney = ns.getServerMoneyAvailable(target);
     if (minSec-nowSec != 0 || maxMoney -nowMoney != 0)
     {
-        ns.tprint("server not primed anymore");
+        ns.print("server not primed anymore");
         if (nowSec -minSec > 20){
             ns.tprint("server security is over 20 out of range");
         }
         return false;
     }
-    else ns.tprint("server primed");
+    else{ 
+        ns.tprint(" ");
+        ns.tprint("server primed");
+    }
     return true;
 }
 
