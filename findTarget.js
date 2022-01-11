@@ -23,20 +23,10 @@ export async function main(ns) {
         }
         return true;
        });
-    //ns.tprint(growableServerObj[1].moneyMax);
 }
 /** @param @param {import(".").NS } ns **/
 function hasMoneyAndCanGrow(ns, target){
     return (ns.getServerMaxMoney(target) > 0 && ns.getServerGrowth(target) > 0);
 }
-/** @param @param {import(".").NS } ns **/
-// function myFilter(ns, serverList, func){
-//     let res = [];
-//     for (let server of serverList){
-//         if (hasMoneyAndCanGrow(ns, server)){
-//             res.push(server);
-//         }
-//     }
-//     return res;
-// }
+
 
