@@ -23,7 +23,7 @@
         ns.tprint('not primed, returning...');
         return;
     }
-    while (ns.hackAnalyze(target) * hackThreads < 1){
+    while (ns.hackAnalyze(target) * hackThreads < 0.5){
         moneyStolen = ns.hackAnalyze(target) * hackThreads * moneyMax;
         secToDestroy =  ns.hackAnalyzeSecurity(hackThreads);
         weakenThreads1 = Math.ceil(secToDestroy/0.05);
@@ -36,7 +36,7 @@
         if (threadSum > maxThreads){
             break;
         }
-        tmp = moneyStolen / threadSum ;
+        tmp = moneyStolen ;/// threadSum ;
         if (tmp > bestDollarPerThread){
             bestDollarPerThread = tmp;
             bestStealPerBatch = moneyStolen;
@@ -50,6 +50,7 @@
 
     ns.tprint("target: ", target);
     ns.tprint("weakenTime in sec is: ",ns.getWeakenTime(target)/1000);
+    ns.tprint("Best steal % ", ns.hackAnalyze(target) * bestThreads[3]);
     ns.tprint("Best dollar per Thread: ", bestDollarPerThread);
     ns.tprint("Best dollar per Thread per WeakenTime: ", bestDollarPerThread/ns.getWeakenTime(target));
     ns.tprint("Money Stolen: ", bestStealPerBatch);

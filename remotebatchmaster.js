@@ -22,11 +22,18 @@
     let playerlvl = ns.args[2]?? ns.getHackingLevel();
     let runCount = ns.args[3]?? 0;
     let batchCountPrev = ns.args[4]?? 0;
+    let playerMoney = ns.args[5] ?? ns.getPlayer().money;
+    let w1 = ns.args[6] ?? 0;
+    let w2 = ns.args[7] ?? 0;
+    let g = ns.args[8] ?? 0;
+    let h = ns.args[9] ?? 0;
     runCount += 1;
     //ns.formulas.hacking.hackExp
     
     ns.disableLog("ALL");
     ns.enableLog("print");
+    let moneyMade = ns.getPlayer().money - playerMoney;
+    playerMoney =  ns.getPlayer().money;
     let minSec = ns.getServerMinSecurityLevel(target);
     let nowSec = ns.getServerSecurityLevel(target);
 
@@ -38,10 +45,11 @@
     if (!isPrimed(ns, target)){
         ns.tprint('server ', target ,' not primed anymore');
     }
+    ns.tprint('last run made in mil :',moneyMade/1000000);
     if (secDiff > 0){
         ns.tprint("secDiff found on: ", target);
         callWeaken(host, target, Math.ceil(secDiff/0.05), ns);
-        ns.asleep(5);
+        ns.asleep(50);
     }
     let moneyAsPartial = nowMoney / maxMoney;
     if (moneyAsPartial != 1){
@@ -49,7 +57,7 @@
         let growthAmount = 1 / moneyAsPartial;
         let growthThreads = ns.growthAnalyze(target, growthAmount);
         callGrow(host, target, Math.max(growthThreads,1), ns);
-        ns.asleep(5);
+        ns.asleep(50);
     }
     // if (runCount == 3){ // letsprime
     //     runCount = 0;
@@ -80,7 +88,17 @@
     let growTime = ns.getGrowTime(target);
     let hackTime = ns.getHackTime(target);
 
-    let bestThreads = calculateBatch(ns, target, freeRam);
+    let bestThreads = [0,0,0,0,0];
+    if (w1 == 0){
+        bestThreads = calculateBatch(ns, target, freeRam);
+    }
+    else{
+        bestThreads[0] = w1;
+        bestThreads[1] = w2;
+        bestThreads[2] = g;
+        bestThreads[3] = h;
+        bestThreads[4] = w1 + w2 + g + h;
+    }
 
     let bufferTime = 5;
     ns.tprint("hackTime: ",hackTime);
@@ -90,7 +108,7 @@
         batchCount = Math.min(Math.floor(hackTime/bufferTime),Math.floor(freeRam/ (ramPerThread*bestThreads[4])));// ns.args[4] ?? 100; //
     }
     else {
-        batchCount = batchCountPrev;
+        batchCount = Math.min(batchCountPrev, Math.floor(freeRam/ (ramPerThread*bestThreads[4])));
     }
     // if (batchCountPrev > batchCount){
     //     ns.tprint("prev Batchcount was higher -> hackTime got lower");
@@ -143,7 +161,7 @@
     //let timeFirstFunctionCallHits = startTimes[3] + hackTime; // not working ?? 
     // setTimeout(callBatchmaster, timeFirstFunctionCallHits +bufferTime,ns, host, target,playerlvl); // calling itself after run
     await ns.asleep(timeFirstFunctionCallHits +bufferTime*2);
-    ns.tprint("starting batchmaster again ps: ", ns.exec('BitBurner-scripts/remotebatchmaster.js',ns.getHostname(), 1,host , target,playerlvl,runCount,batchCount ));
+    ns.tprint("starting batchmaster again ps: ", ns.exec('BitBurner-scripts/remotebatchmaster.js',ns.getHostname(), 1,host , target,playerlvl,runCount,batchCount,playerMoney, bestThreads[0], bestThreads[1], bestThreads[2], bestThreads[3] ));
 }
 
 function isPrimed(ns, target){
@@ -218,7 +236,7 @@ function calculateBatch(ns,target, limitedRam) {
         if (threadSum > maxThreads){
             break;
         }
-        tmp = moneyStolen / threadSum ;
+        tmp = moneyStolen * maxThreads / threadSum  ;
         if (tmp > bestDollarPerThread){
             bestDollarPerThread = tmp;
             bestStealPerBatch = moneyStolen;
@@ -231,9 +249,9 @@ function calculateBatch(ns,target, limitedRam) {
         }
         hackThreads++;
     }
-    ns.print("||||||||||||||||||||||||||||||||||||||||| ");
-    ns.print("threads needed: (w, w, g, h) ", bestThreads);
-    ns.print("||||||||||||||||||||||||||||||||||||||||| ");
+    ns.tprint("||||||||||||||||||||||||||||||||||||||||| ");
+    ns.tprint("threads needed: (w, w, g, h) ", bestThreads);
+    ns.tprint("||||||||||||||||||||||||||||||||||||||||| ");
     return bestThreads;
 }
 
