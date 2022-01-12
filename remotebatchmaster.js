@@ -89,7 +89,7 @@
         bestThreads[4] = w1 + w2 + g + h;
     }
 
-    let bufferTime = 5;
+    let bufferTime = 10;
     ns.tprint("hackTime: ",hackTime);
     ns.tprint("bestThreads: ", bestThreads);
     let batchCount = 0;
