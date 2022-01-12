@@ -11,6 +11,14 @@
     let maxRam = 2**20;
     let buy = ns.args[1] ?? 0;
     let nbr = ns.args[0] ?? 0;
+    let buyAll = ns.args[2]?? 0;
+    if (buyAll == 1){
+        for (let i = 0; i < 25; i++){
+            ns.purchaseServer('chad-' + i, maxRam);
+        }
+        ns.tprint("all chads online ");
+        return;
+    }
     while (money > ns.getPurchasedServerCost(ram *2)){
         ram *= 2;
     }

@@ -17,6 +17,35 @@
 /** @param {import(".").NS } ns **/
  export async function main(ns) {
     let target = ns.args[0] ?? 'n00dles';
+    let loopAll = ns.args[1] ?? 0;
+    let serverList = ["foodnstuff","sigma-cosmetics","joesguns","hong-fang-tea","harakiri-sushi","iron-gym","darkweb","nectar-net","CSEC","zer0","max-hardware","neo-net","silver-helix","omega-net","phantasy","comptek","netlink","johnson-ortho","crush-fitness","avmnite-02h","the-hub","summit-uni","zb-institute","I.I.I.I","rothman-uni","syscore","catalyst","millenium-fitness","alpha-ent","lexo-corp","rho-construction","aevum-police","aerocorp","galactic-cyber","global-pharm","snap-fitness","omnia","unitalife","deltaone","defcomm","solaris","icarus","univ-energy","zeus-med","taiyang-digital","nova-med","infocomm","zb-def","microdyne","titan-labs","applied-energetics","run4theh111z","fulcrumtech","stormtech","vitalife","helios","4sigma","omnitek","kuai-gong",".","blade","b-and-a","nwo","powerhouse-fitness","clarkinc","megacorp","fulcrumassets","ecorp","The-Cave"];
+
+    if (loopAll == 1){
+        for (let serv of serverList){
+          await primeServer(ns, serv);
+        }
+        return;
+    }
+    await primeServer(ns, target);
+
+}
+/** @param {import(".").NS } ns **/
+function calculateWeakenThreads(freeRam, minSec, nowSec){
+    /**
+     * argument {int} freeRam
+     * argument {int} minSec : minimum security of the server
+     * argument {int} nowSec : current security of the server 
+     * 
+     * calculates the amount of Threads needed to reach minimum security with one call of weaken.
+     * If not enough Ram is available it will do the most threads possible
+     */
+
+    let maxThreads = Math.floor(freeRam / 1.75);
+    let secDiff = nowSec - minSec;
+    return Math.max(1,Math.ceil(Math.min(maxThreads, (secDiff/0.05))));
+}
+
+async function primeServer(ns, target){
     ns.disableLog("ALL");
     let minSec = ns.getServerMinSecurityLevel(target);
     let nowSec = ns.getServerSecurityLevel(target);
@@ -62,21 +91,6 @@
             ns.tprint('primed target: ', target);
         }
     }
-}
-/** @param {import(".").NS } ns **/
-function calculateWeakenThreads(freeRam, minSec, nowSec){
-    /**
-     * argument {int} freeRam
-     * argument {int} minSec : minimum security of the server
-     * argument {int} nowSec : current security of the server 
-     * 
-     * calculates the amount of Threads needed to reach minimum security with one call of weaken.
-     * If not enough Ram is available it will do the most threads possible
-     */
-
-    let maxThreads = Math.floor(freeRam / 1.75);
-    let secDiff = nowSec - minSec;
-    return Math.max(1,Math.ceil(Math.min(maxThreads, (secDiff/0.05))));
 }
 
 

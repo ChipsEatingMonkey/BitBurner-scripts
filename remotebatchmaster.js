@@ -47,29 +47,18 @@
     }
     ns.tprint('last run made in mil :',moneyMade/1000000);
     if (secDiff > 0){
-        ns.tprint("secDiff found on: ", target);
+        ns.tprint("secDiff found on: ", target, "T: ", Math.ceil(secDiff/0.05));
         callWeaken(host, target, Math.ceil(secDiff/0.05), ns);
         ns.asleep(50);
     }
     let moneyAsPartial = nowMoney / maxMoney;
     if (moneyAsPartial != 1){
-        ns.tprint("missing money found found on: ", target);
+        ns.tprint("missing money found found on: ", target,"T: ",growthThreads);
         let growthAmount = 1 / moneyAsPartial;
         let growthThreads = ns.growthAnalyze(target, growthAmount);
         callGrow(host, target, Math.max(growthThreads,1), ns);
         ns.asleep(50);
     }
-    // if (runCount == 3){ // letsprime
-    //     runCount = 0;
-    //     if (nowSec - minSec > 0) {
-    //         ns.tprint("runtime was 3, lets prime!");
-    //         ns.exec('BitBurner-scripts/weaken.js',ns.getHostname(), calculateWeakenThreads(freeRam, minSec, nowSec), target);
-    //         await ns.asleep(50);
-    //         freeRam = ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
-    //         ns.exec('BitBurner-scripts/grow.js',ns.getHostname(), calculateGrowThreads(ns, target, freeRam, maxMoney, nowMoney), target); 
-    //         await ns.asleep(ns.getWeakenTime(target)); 
-    //     }
-    // }
 
     
     let ramPerThread = 1.75;
