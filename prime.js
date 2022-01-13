@@ -22,7 +22,7 @@
 
     if (loopAll == 1){
         for (let serv of serverList){
-          await primeServer(ns, serv);
+          ns.exec('/BitBurner-scipts.js', ns.getHostname(), 1, serv);
         }
         return;
     }

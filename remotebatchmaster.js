@@ -53,9 +53,9 @@
     }
     let moneyAsPartial = nowMoney / maxMoney;
     if (moneyAsPartial != 1){
-        ns.tprint("missing money found found on: ", target,"T: ",growthThreads);
         let growthAmount = 1 / moneyAsPartial;
         let growthThreads = ns.growthAnalyze(target, growthAmount);
+        ns.tprint("missing money found found on: ", target,"T: ",growthThreads);
         callGrow(host, target, Math.max(growthThreads,1), ns);
         ns.asleep(50);
     }
@@ -135,17 +135,22 @@
     //         }
         
     // }
+    let start = Date.now();
+    let timeExecution = 0;
     for (let batch = 0; batch < batchCount; batch++){
-        setTimeout(callWeaken, startTimes[0]+ batch*batchTime,host, target , bestThreads[0], ns);
-        setTimeout(callWeaken, startTimes[1]+ batch*batchTime,host, target , bestThreads[1], ns);
-        setTimeout(callGrow, startTimes[2]+ batch*batchTime,host, target , bestThreads[2], ns); 
-        setTimeout(callHack, startTimes[3]+ batch*batchTime,host, target , bestThreads[3], ns);
+        timeExecution = Date.now() - start;
+        setTimeout(callWeaken, (startTimes[0]+ batch*batchTime)-timeExecution,host, target , bestThreads[0], ns);
+        setTimeout(callWeaken, (startTimes[1]+ batch*batchTime)-timeExecution,host, target , bestThreads[1], ns);
+        setTimeout(callGrow, (startTimes[2]+ batch*batchTime)-timeExecution,host, target , bestThreads[2], ns); 
+        setTimeout(callHack, (startTimes[3]+ batch*batchTime)-timeExecution,host, target , bestThreads[3], ns);
 
        // ns.print("callHack, GOING OFF: ", Math.floor(hackTime +startTimes[3]+ batch*batchTime)%1000);
        // ns.print("callWeaken, GOING OFF: ", Math.floor(weakenTime +(startTimes[0]+ batch*batchTime))%1000);
        // ns.print("callGrow, GOING OFF: ", Math.floor(growTime +startTimes[2]+ batch*batchTime)%1000);
        // ns.print("callWeaken, GOING OFF: ",Math.floor(weakenTime + startTimes[1]+ batch*batchTime)%1000);
     }
+    timeExecution = Date.now() - start;
+    console.log("execution time was: ",timeExecution);
     let timeFirstFunctionCallHits = hackTime +startTimes[3]+ batchCount*batchTime //not optimised the old way
     //let timeFirstFunctionCallHits = startTimes[3] + hackTime; // not working ?? 
     // setTimeout(callBatchmaster, timeFirstFunctionCallHits +bufferTime,ns, host, target,playerlvl); // calling itself after run
