@@ -22,7 +22,7 @@
 
     if (loopAll == 1){
         for (let serv of serverList){
-          ns.exec('/BitBurner-scipts.js', ns.getHostname(), 1, serv);
+          ns.exec('/BitBurner-scipts/prime.js', ns.getHostname(), 1, serv);
         }
         return;
     }
