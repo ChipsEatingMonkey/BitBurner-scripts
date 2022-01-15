@@ -1,6 +1,6 @@
 /**
  * 
- * recruit all andis and train them
+ * recruit all andis and train them!
  */
 /** @param @param {import("../.").NS } ns **/
 export async function main(ns) {
