@@ -15,5 +15,5 @@ export async function main(ns) {
         let memberName = 'andi-' + andiNbr++;
         ns.gang.setMemberTask(memberName, "Train Combat");
     }
-    ns.tprint("number of andis in gang is now: ",andiNbr);
+    ns.tprint("number of AnDis in gang is now: ",andiNbr);
 }
