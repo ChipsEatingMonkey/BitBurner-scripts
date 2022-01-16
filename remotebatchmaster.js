@@ -99,42 +99,13 @@
     else {
         batchCount = Math.min(batchCountPrev, Math.floor(freeRam/ (ramPerThread*bestThreads[4])));
     }
-    // if (batchCountPrev > batchCount){
-    //     ns.tprint("prev Batchcount was higher -> hackTime got lower");
-    //     ns.tprint("sleeping here for a sec to see impact ");
-    //     ns.asleep(1000);
-    // }
-    // if (batchCountPrev < batchCount && batchCountPrev != 0){
-    //     batchCount = batchCountPrev;
-    // }
     
-    //batchCount *= 2;
-    //if (batchCount > weakenTime /20){
-    //    batchCount = Math.floor(weakenTime /20);
-   // }
     
     //let batchCount = 4684;//(weakenTime * 0.9) / bufferTime; // needs check if server can handle that
     ns.tprint("batchCount: ",batchCount);
     let batchTime = 4* bufferTime;
     let startTimes = [bufferTime,3*bufferTime , 2*bufferTime +(weakenTime-growTime), weakenTime - hackTime];  //w, w ,g h
     
-
-    
-    
-    //if (maxMoney / (maxMoney -nowMoney) > ns.growthAnalyze)
-  
-    //let moneyAsPartial = nowMoney / maxMoney ;
-    // moneyAP * gA = 1
-    //let growthAmount = 1 / moneyAsPartial;
-    // if (ns.growthAnalyze(target, growthAmount)  >= batchCount)
-    // {
-    //     if (bestThreads[3] >= 2) {
-    //         ns.tprint("increasing growcalls at cost of hackingcalls");
-    //         bestThreads[3] -= 1;
-    //         bestThreads[2] += 1;
-    //         }
-        
-    // }
     let start = Date.now();
     let timeExecution = 0;
     for (let batch = 0; batch < batchCount; batch++){
