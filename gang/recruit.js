@@ -13,6 +13,7 @@ export async function main(ns) {
     
     while (ns.gang.canRecruitMember()){
         let memberName = 'andi-' + andiNbr++;
+        ns.gang.recruitMember(memberName);
         ns.gang.setMemberTask(memberName, "Train Combat");
     }
     ns.tprint("number of andis in gang is now: ",andiNbr);
