@@ -1,6 +1,6 @@
 /**
  * 
- * recruit all andis and train them
+ * recruit all andis and train them!
  */
 /** @param @param {import("../.").NS } ns **/
 export async function main(ns) {
@@ -16,5 +16,5 @@ export async function main(ns) {
         ns.gang.recruitMember(memberName);
         ns.gang.setMemberTask(memberName, "Train Combat");
     }
-    ns.tprint("number of andis in gang is now: ",andiNbr);
+    ns.tprint("number of AnDis in gang is now: ",andiNbr);
 }
